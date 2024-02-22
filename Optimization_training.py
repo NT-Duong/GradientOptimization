@@ -20,6 +20,9 @@ slope = None
 intercept = None
 filename = None
 inputx = None
+fig =None
+ax =None
+window2= None
 
 def lost_one(a, deg):
     return a+(deg*weight)
@@ -28,7 +31,7 @@ def lost_two(a,b,deg):
     return (a-b)^2
 
 def train():
-    global ax
+    global ax, filename
     df = pandas.read_excel(filename)
 
     #get column names
@@ -40,10 +43,6 @@ def train():
     global x_column, y_column
     x_column = df[x_name].tolist()
     y_column = df[y_name].tolist()
-
-    # print(x_column)
-    # print(y_column)
-    print("model trained")
 
 
 def makegraph():
@@ -78,24 +77,19 @@ def makegraph():
     line_x = np.linspace(min_x, max_x+10, 200)
     plt.plot(line_x, slope * line_x + intercept, color='g')
     canvas.draw()
-    print("graph plotted")
 
 def plotprediction():
-    global val_x, val_y, slope, intercept, prediction_input
+    global val_x, val_y, slope, intercept, prediction_input, min_x, max_x
     inputx = prediction_input.get()
     val_x= float(inputx)
-    plt.clf()
-    makegraph()
     if (slope==None) or (intercept==None):
         print("Please input training data first")
     else:
         val_y = float((val_x*slope)+intercept)
         #add new point to scatter plot
         plt.scatter(val_x,val_y, c="red")
+
     canvas.draw()
-    print("prediction plotted")
-    print(slope)
-    print(intercept)
 
 def browseFiles():
     global filename, output_label
@@ -107,61 +101,65 @@ def browseFiles():
                                                         "*.*")))
     output_label = "File: "+ filename
 
+def cleargraph():
+    plt.cla()
+    canvas.draw()
+
 #main
 show = True
 window = tk.Tk()
 prediction_input = tk.StringVar()
 output_label = tk.StringVar()
-output_label = "AI Prediction"
+output_label = "AI Prediction Graph"
 window.config(background = "white")
-
-#graph window
-window2 = tk.Tk()
-graph_label = tk.Label(text = "Best Fit Graph", background="white", font=12, master=window2).pack()
-fig, ax = plt.subplots()
-plt.subplots_adjust(top =0.925)
-canvas = FigureCanvasTkAgg(fig, master=window2)
-canvas.get_tk_widget().pack()
-tookbar = NavigationToolbar2Tk(canvas, pack_toolbar = False)
-
-tookbar.pack(anchor = "center", fill = tk.X)
 
 label_file_explorer = tk.Label(window, 
                             text = output_label,
                             width = 100,
                             height = 2, 
                             fg = "blue"
-                            ).grid(row=0,column=0, columnspan=2)
+                            ).grid(row=2,column=0, columnspan=4)
+
+fig, ax = plt.subplots()
+canvas = FigureCanvasTkAgg(fig, master=window)
+canvas.get_tk_widget().grid(row=0, columnspan=4)
+toolbar = NavigationToolbar2Tk(canvas, pack_toolbar = False)
+toolbar.grid(row=1, columnspan=4)
 
 button_explore = tk.Button(window, 
                         text = "Browse Files",
                         command = browseFiles
-                        ).grid(row=1,column=0)
+                        ).grid(row=3,column=0)
+
+train_model = tk.Button(
+    window,
+    text= "Train Model",
+    command= train
+).grid(row=4,column=0)
+
+plot_graph = tk.Button(
+    window,
+    text= "Plot Graph",
+    command= lambda: [makegraph()]
+).grid(row=3,column=1)
+
+clear_graph = tk.Button(
+    window,
+    text= "Clear Graph",
+    command= lambda: [cleargraph()]
+).grid(row=4,column=1)
 
 prediction_entry = tk.Entry(
     window,
     fg="gray", 
     width = 20,
     textvariable = prediction_input
-).grid(row=1,column=1)
+).grid(row=3,column=2)
 
 prediction_btn = tk.Button(
     window,
     text= "Make Prediction",
     command = plotprediction
-).grid(row=2,column=1)
-
-train_model = tk.Button(
-    window,
-    text= "Train Model",
-    command= train
-).grid(row=2,column=0)
-
-show_graph = tk.Button(
-    window,
-    text= "Show Graph",
-    command= lambda: [makegraph()]
-).grid(row=3,column=0)
-
+).grid(row=4,column=2)
 
 window.mainloop()
