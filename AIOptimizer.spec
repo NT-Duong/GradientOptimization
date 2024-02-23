@@ -31,7 +31,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['icon.ico'],
+    icon=['C:\\Program Files\\Git\\icon.ico'],
 )
 coll = COLLECT(
     exe,

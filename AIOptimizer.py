@@ -8,8 +8,7 @@ from tkinter import filedialog
 #global variables
 x_name = None
 y_name = None
-x_column = None
-y_column = None
+data = None
 val_x = None
 val_y = None
 min_x = None
@@ -22,12 +21,10 @@ inputx = None
 fig =None
 ax =None
 window2= None
+min_lost = 0
 
 def lost_one(act, pred):
-    return act-pred
-
-def lost_two(act,pred):
-    return (act-pred)^2
+    return pow((act-pred),2)*-2
 
 def train():
     global ax, filename, x_name, y_name
@@ -39,9 +36,9 @@ def train():
     ax.set_xlabel(x_name)
     ax.set_ylabel(y_name)
     #create x and y coodinate list
-    global x_column, y_column
-    x_column = df[x_name].tolist()
-    y_column = df[y_name].tolist()
+    global data
+    data = list(zip(df[x_name],df[y_name]))
+    
 
 
 def makegraph():
@@ -49,35 +46,37 @@ def makegraph():
     global min_x, max_x, slope, intercept,ax, val_x
 
     #scatter graph
-    ax.scatter(x_column,y_column, c ="blue")
+    x,y = zip(*data)
+    ax.scatter(x,y, c ="blue")
 
     # get min and max for x-axis
     if (val_x != None):
-        if(int(val_x) < min(x_column)):
+        if(int(val_x) < min(x)):
             min_x = val_x
-            if (int(val_x) > max(x_column)):
+            if (int(val_x) > max(x)):
                 max_x = int(val_x)
             else:
-                max_x = max(x_column)
+                max_x = max(x)
         else:
-            min_x = min(x_column)
-            if (int(val_x) > max(x_column)):
+            min_x = min(x)
+            if (int(val_x) > max(x)):
                 max_x = int(val_x)
             else:
-                max_x = max(x_column)
+                max_x = max(x)
     else:
-        min_x = min(x_column)
-        max_x = max(x_column)
+        min_x = min(x)
+        max_x = max(x)
 
     #set x and y axis label
     if x_name and y_name != None:
         ax.set_xlabel(x_name)
         ax.set_ylabel(y_name)
     #calculate slope and intercept
-    (slope, intercept), (SSE,), *_ = np.polyfit(x_column, y_column, deg=1, full=True)
+    (slope, intercept), (SSE,), *_ = np.polyfit(x, y, deg=1, full=True)
 
     # Plot the trend line.
-    line_x = np.linspace(min_x, max_x+10, 200)
+    line_x = np.linspace(0, max_x+10, 200)
+    intercept += min_lost
     ax.plot(line_x, slope * line_x + intercept, color='g')
     canvas.draw()
 
@@ -105,9 +104,10 @@ def browseFiles():
     output_label = "File: "+ filename
 
 def cleargraph():
-    global ax, val_x
+    global ax, val_x, min_lost
     ax.cla()
     val_x = None
+    min_lost =0
     canvas.draw()
 
 def optimizer():
@@ -115,6 +115,7 @@ def optimizer():
     optimizer = tk.Tk()
     optimizer.geometry("600x600")
     optimizer.configure(background="white")
+    optimizer.title("Gradient Descent Optimizer")
     opt_label = tk.Label(
                         optimizer, 
                         width = 70,
@@ -130,19 +131,38 @@ def optimizer():
     toolbar1.pack(padx=2,pady=2)
 
     #optimize training data
-    global x_column, y_column, x_name,y_name, slope,intercept
-    lost_array = []
-    for a in x_column:
-        predicted = (a*slope)+intercept
-        actual = y_column[x_column.index(a)]
-        lost_array.append(lost_one(actual,predicted))
-    ax1.scatter(x_column,lost_array)
-    z = np.polyfit(x_column, lost_array, 3)
-    f = np.poly1d(z)
-    x = np.linspace(min(x_column), max(x_column),50)
-    y = f(x)
-    ax1.plot(x_column,lost_array,'o', x, y)
-    ax1.xlim([x_column[0]-1, x_column[-1] + 1 ])
+    global data, x_name,y_name, slope, min_lost
+    lost_x = []
+    lost_y = []
+
+    x,y = zip(*data)
+    learning =0.1
+    for i in range(1000):
+        for a in y:
+            actual = a
+            predicted = i+(slope*actual)
+            lost =+ lost_one(a,predicted)
+        lost_x.append(i)
+        lost_y.append(lost)
+        i = learning*lost
+    
+    lost_data = []
+    for j in lost_x:
+        lost_data.append([j,lost_y[j]])
+
+    ax1.plot(lost_x, lost_y, color='g')
+    min_lost = lost_x[lost_y.index(max(lost_y))]
+    print(min_lost)
+    return
+
+
+    # ax1.scatter(data,lost_array)
+    # z = np.polyfit(data, lost_array, 3)
+    # f = np.poly1d(z)
+    # x = np.linspace(min(data), max(data),50)
+    # y = f(x)
+    # ax1.plot(data,lost_array,'o', x, y)
+    # ax1.xlim([data[0]-1, data[-1] + 1 ])
 
 #main
 window = tk.Tk()
