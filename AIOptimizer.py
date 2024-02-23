@@ -23,7 +23,9 @@ ax =None
 window2= None
 min_lost = 0
 
+
 def lost_one(act, pred):
+    #calculate lost function
     return pow((act-pred),2)*-2
 
 def train():
@@ -75,20 +77,20 @@ def makegraph():
     (slope, intercept), (SSE,), *_ = np.polyfit(x, y, deg=1, full=True)
 
     # Plot the trend line.
-    line_x = np.linspace(0, max_x+10, 200)
-    intercept += min_lost
+    line_x = np.linspace(min_x-(min_x*0.1), max_x+(max_x*0.1), 200)
     ax.plot(line_x, slope * line_x + intercept, color='g')
     canvas.draw()
 
 def plotprediction():
     global val_x, val_y, slope, intercept, prediction_input, min_x, max_x
+    #get prediction input
     inputx = prediction_input.get()
     val_x= float(inputx)
     if (slope==None) or (intercept==None):
         print("Please input training data first")
     else:
         val_y = float((val_x*slope)+intercept)
-        #add new point to scatter plot
+        #add new prediction point to scatter plot
         ax.scatter(val_x,val_y, c="red")
 
     canvas.draw()
@@ -112,32 +114,32 @@ def cleargraph():
 
 def optimizer():
     #create new optimizer window
-    optimizer = tk.Tk()
-    optimizer.geometry("600x600")
-    optimizer.configure(background="white")
-    optimizer.title("Gradient Descent Optimizer")
-    opt_label = tk.Label(
-                        optimizer, 
-                        width = 70,
-                        height = 2,
-                        font=16,
-                        fg = "black",
-                        text="Optimizer").pack()
-    fig1, ax1 = plt.subplots()
-    canvas1 = FigureCanvasTkAgg(fig1, master=optimizer)
-
-    canvas1.get_tk_widget().pack()
-    toolbar1 = NavigationToolbar2Tk(canvas1, pack_toolbar = False)
-    toolbar1.pack(padx=2,pady=2)
+    # optimizer = tk.Tk()
+    # optimizer.geometry("600x600")
+    # optimizer.configure(background="white")
+    # optimizer.title("Gradient Descent Optimizer")
+    # tk.Label(
+    #         optimizer, 
+    #         width = 70,
+    #         height = 2,
+    #         font=16,
+    #         fg = "black",
+    #         text="Optimizer").pack()
+    # fig1, ax1 = plt.subplots()
+    # canvas1 = FigureCanvasTkAgg(fig1, master=optimizer)
+    # canvas1.get_tk_widget().pack()
+    # toolbar1 = NavigationToolbar2Tk(canvas1, pack_toolbar = False)
+    # toolbar1.pack(padx=2,pady=2)
 
     #optimize training data
     global data, x_name,y_name, slope, min_lost
     lost_x = []
     lost_y = []
 
+    data = sorted(data, key=lambda z: z[0])
     x,y = zip(*data)
     learning =0.1
-    for i in range(1000):
+    for i in range(200):
         for a in y:
             actual = a
             predicted = i+(slope*actual)
@@ -148,13 +150,29 @@ def optimizer():
     
     lost_data = []
     for j in lost_x:
-        lost_data.append([j,lost_y[j]])
+        lost_data.append([j,lost_y[lost_x.index(j)]])
 
-    ax1.plot(lost_x, lost_y, color='g')
+    # ax1.plot(lost_x, lost_y, color='g')
     min_lost = lost_x[lost_y.index(max(lost_y))]
     print(min_lost)
-    return
 
+    #find closest point for min_lost
+    closest_x = None
+    for i in x:
+        current_y = y[x.index(i)]
+        current_x = (i*slope)+min_lost
+        if closest_x ==None:
+            #set base closest_x
+            closest_x = current_y
+        else:
+            if current_y - current_x < closest_x:
+                closest_x = i
+    plot_x = (closest_x*slope)+intercept
+    plot_y = (plot_x*slope)+intercept
+    ax.scatter(plot_x,plot_y, c="#e800b2")
+    canvas.draw()
+    print(plot_x)
+    print(plot_y)
 
     # ax1.scatter(data,lost_array)
     # z = np.polyfit(data, lost_array, 3)
