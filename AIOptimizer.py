@@ -115,6 +115,7 @@ def optimizer():
     optimizer = tk.Tk()
     optimizer.geometry("600x600")
     optimizer.configure(background="white")
+    optimizer.title("Optimizer")
     opt_label = tk.Label(
                         optimizer, 
                         width = 70,
